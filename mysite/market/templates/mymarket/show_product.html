@@ -1,0 +1,18 @@
+{% extends 'mymarket/base.html' %}
+
+{% block content %}
+<h1>{{product.title}}</h1>
+
+{% if product.photo %}
+<p><img class="img-article-left" src="{{product.photo.url}}"></p>
+{% endif %}
+
+{{product.description|linebreaks}}
+<p class="price">${{ product.price }}</p>
+<form action="{% url 'cart_add' product.id %}" method="post">
+    {{ cart_form }}
+    {% csrf_token %}
+    <input type="submit" value="Add to cart">
+</form>
+{% endblock %}
+
