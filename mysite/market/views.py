@@ -59,18 +59,18 @@ class RegisterUser(DataMixin, CreateView):
 
 
 def login(request):
-    return HttpResponse("Авторизация")
+    return render(request, 'mymarket/contact.html')
 
 
 @require_POST
-def cart_add(request, product_id):
+def cart_add(request, product_id, count=1):
     cart = Cart(request)
     product = get_object_or_404(Product, id=product_id)
     form = CartAddProductForm(request.POST)
     if form.is_valid():
         data = form.cleaned_data
         cart.add(product=product,
-                 quantity=data['quantity'],
+                 quantity=count,
                  update_quantity=data['update'])
     return redirect('cart')
 
@@ -85,3 +85,24 @@ def cart_remove(request, product_id):
 def cart_detail(request):
     cart = Cart(request)
     return render(request, 'cart/detail.html', {'cart': cart})
+
+
+def order_create(request):
+    cart = Cart(request)
+    if request.method == 'POST':
+        form = OrderCreateForm(request.POST)
+        if form.is_valid():
+            order = form.save()
+            for item in cart:
+                OrderItem.objects.create(order=order,
+                                         product=item['product'],
+                                         price=item['price'],
+                                         quantity=item['quantity'])
+            # очистка корзины
+            cart.clear()
+            return render(request, 'order/created.html',
+                          {'order': order})
+    else:
+        form = OrderCreateForm
+        return render(request, 'order/create.html',
+                      {'cart': cart, 'form': form})
